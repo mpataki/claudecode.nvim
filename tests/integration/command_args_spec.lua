@@ -149,9 +149,12 @@ describe("ClaudeCode command arguments integration", function()
               port_range = { min = 10000, max = 65535 },
               auto_start = false,
               terminal_cmd = nil,
-              log_level = "info",
+                    log_level = "info",
               track_selection = true,
               visual_demotion_delay_ms = 50,
+              connection_wait_delay = 200,
+              connection_timeout = 10000,
+              queue_timeout = 5000,
               diff_opts = {
                 auto_close_on_accept = true,
                 show_diff_stats = true,
@@ -215,7 +218,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should execute terminal command with appended arguments", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal_cmd = "test_claude_cmd",
         terminal = { provider = "native" },
       })
@@ -253,7 +255,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should work with default claude command and arguments", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal = { provider = "native" },
       })
 
@@ -278,7 +279,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should handle empty arguments gracefully", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal_cmd = "claude",
         terminal = { provider = "native" },
       })
@@ -308,7 +308,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should handle special characters in arguments", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal_cmd = "claude",
         terminal = { provider = "native" },
       })
@@ -334,7 +333,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should handle very long argument strings", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal_cmd = "claude",
         terminal = { provider = "native" },
       })
@@ -363,7 +361,6 @@ describe("ClaudeCode command arguments integration", function()
     it("should not break existing calls without arguments", function()
       claudecode.setup({
         auto_start = false,
-        enable_terminal = true,
         terminal_cmd = "claude",
         terminal = { provider = "native" },
       })
