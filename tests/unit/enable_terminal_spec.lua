@@ -87,8 +87,8 @@ describe("enable_terminal configuration", function()
       end
     end
 
-    -- Reset user commands tracking
-    vim.api.nvim_create_user_command.calls = {}
+    -- Set up spy for nvim_create_user_command
+    spy.on(vim.api, "nvim_create_user_command")
 
     -- Load the module
     package.loaded["claudecode"] = nil
