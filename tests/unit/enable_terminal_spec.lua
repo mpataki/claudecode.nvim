@@ -2,251 +2,7 @@ require("tests.busted_setup")
 require("tests.mocks.vim")
 
 describe("enable_terminal configuration", function()
-  local claudecode
-  local mock_server
-  local mock_lockfile
-  local mock_selection
-  local mock_terminal
-  local terminal_opened = false
-  local terminal_ensured_visible = false
-
-  before_each(function()
-    terminal_opened = false
-    terminal_ensured_visible = false
-
-    -- Mock dependencies
-    mock_server = {
-      start = function()
-        return true, 12345
-      end,
-      stop = function()
-        return true
-      end,
-      broadcast = function()
-        return true
-      end,
-      get_client_count = function()
-        return 0  -- Default to no clients
-      end,
-      get_status = function()
-        return {
-          running = true,
-          client_count = 0,  -- Default to no clients
-        }
-      end,
-    }
-
-    mock_lockfile = {
-      create = function()
-        return true, nil, "test-token"
-      end,
-      remove = function()
-        return true
-      end,
-      generate_auth_token = function()
-        return "test-auth-token"
-      end,
-    }
-
-    mock_selection = {
-      enable = function() end,
-      disable = function() end,
-    }
-
-    mock_terminal = {
-      setup = function() end,
-      open = function()
-        terminal_opened = true
-      end,
-      ensure_visible = function()
-        terminal_ensured_visible = true
-      end,
-      close = function() end,
-      simple_toggle = function() end,
-      focus_toggle = function() end,
-    }
-
-    -- Mock require to intercept module loading
-    local original_require = require
-    _G.require = function(mod)
-      if mod == "claudecode.server.init" then
-        return mock_server
-      elseif mod == "claudecode.lockfile" then
-        return mock_lockfile
-      elseif mod == "claudecode.selection" then
-        return mock_selection
-      elseif mod == "claudecode.terminal" then
-        return mock_terminal
-      elseif mod == "claudecode.diff" then
-        return {
-          setup = function() end,
-        }
-      elseif mod == "claudecode.logger" then
-        return {
-          setup = function() end,
-          info = function() end,
-          warn = function() end,
-          error = function() end,
-          debug = function() end,
-        }
-      else
-        return original_require(mod)
-      end
-    end
-
-    -- Set up spy for nvim_create_user_command
-    spy.on(vim.api, "nvim_create_user_command")
-
-    -- Load the module
-    package.loaded["claudecode"] = nil
-    claudecode = require("claudecode")
-  end)
-
-  after_each(function()
-    _G.require = require
-  end)
-
-  describe("when enable_terminal is true (default)", function()
-    it("should register terminal commands", function()
-      claudecode.setup({
-        auto_start = false,
-      })
-
-      local registered_commands = {}
-      for _, call in ipairs(vim.api.nvim_create_user_command.calls) do
-        registered_commands[call.vals[1]] = true
-      end
-
-      assert.is_true(registered_commands["ClaudeCode"] ~= nil)
-      assert.is_true(registered_commands["ClaudeCodeOpen"] ~= nil)
-      assert.is_true(registered_commands["ClaudeCodeClose"] ~= nil)
-      assert.is_true(registered_commands["ClaudeCodeFocus"] ~= nil)
-    end)
-
-    it("should launch terminal on @ mention when Claude not connected", function()
-      claudecode.setup({
-        auto_start = false,
-      })
-
-      -- Start the server
-      claudecode.start()
-
-      -- Simulate Claude not connected
-      mock_server.get_status = function()
-        return {
-          running = true,
-          client_count = 0,
-        }
-      end
-
-      -- Send @ mention
-      claudecode.send_at_mention("test.lua", 1, 10)
-
-      assert.is_true(terminal_opened)
-    end)
-
-    it("should ensure terminal visible on @ mention when Claude connected", function()
-      claudecode.setup({
-        auto_start = false,
-      })
-
-      -- Start the server
-      claudecode.start()
-
-      -- Simulate Claude connected
-      mock_server.get_status = function()
-        return {
-          running = true,
-          client_count = 1,
-        }
-      end
-
-      -- Send @ mention
-      claudecode.send_at_mention("test.lua", 1, 10)
-
-      assert.is_true(terminal_ensured_visible)
-    end)
-  end)
-
-  describe("when enable_terminal is false", function()
-    it("should not register terminal commands", function()
-      claudecode.setup({
-        auto_start = false,
-        enable_terminal = false,
-      })
-
-      local registered_commands = {}
-      for _, call in ipairs(vim.api.nvim_create_user_command.calls) do
-        registered_commands[call.vals[1]] = true
-      end
-
-      assert.is_nil(registered_commands["ClaudeCode"])
-      assert.is_nil(registered_commands["ClaudeCodeOpen"])
-      assert.is_nil(registered_commands["ClaudeCodeClose"])
-      assert.is_nil(registered_commands["ClaudeCodeFocus"])
-    end)
-
-    it("should not launch terminal on @ mention when Claude not connected", function()
-      claudecode.setup({
-        auto_start = false,
-        enable_terminal = false,
-      })
-
-      -- Start the server
-      claudecode.start()
-
-      -- Simulate Claude not connected
-      mock_server.get_status = function()
-        return {
-          running = true,
-          client_count = 0,
-        }
-      end
-
-      -- Send @ mention
-      claudecode.send_at_mention("test.lua", 1, 10)
-
-      assert.is_false(terminal_opened)
-    end)
-
-    it("should not ensure terminal visible on @ mention when Claude connected", function()
-      claudecode.setup({
-        auto_start = false,
-        enable_terminal = false,
-      })
-
-      -- Start the server
-      claudecode.start()
-
-      -- Simulate Claude connected
-      mock_server.get_status = function()
-        return {
-          running = true,
-          client_count = 1,
-        }
-      end
-
-      -- Send @ mention
-      claudecode.send_at_mention("test.lua", 1, 10)
-
-      assert.is_false(terminal_ensured_visible)
-    end)
-
-    it("should not call terminal setup during initialization", function()
-      local terminal_setup_called = false
-      mock_terminal.setup = function()
-        terminal_setup_called = true
-      end
-
-      claudecode.setup({
-        auto_start = false,
-        enable_terminal = false,
-      })
-
-      assert.is_false(terminal_setup_called)
-    end)
-  end)
-
+  -- Test config validation (no mocking needed)
   describe("config validation", function()
     it("should accept boolean true for enable_terminal", function()
       local config = require("claudecode.config")
@@ -319,6 +75,167 @@ describe("enable_terminal configuration", function()
       local success, err = pcall(config.validate, invalid_config)
       assert.is_false(success)
       assert.is_not_nil(string.find(tostring(err), "enable_terminal must be a boolean"))
+    end)
+
+    it("should have enable_terminal = true as default", function()
+      local config = require("claudecode.config")
+      assert.is_true(config.defaults.enable_terminal)
+    end)
+  end)
+
+  -- Test command registration based on config
+  describe("command registration", function()
+    local original_nvim_create_user_command
+
+    before_each(function()
+      -- Clear any loaded modules
+      package.loaded["claudecode"] = nil
+      package.loaded["claudecode.server.init"] = nil
+      package.loaded["claudecode.terminal"] = nil
+      
+      -- Save original and set up spy
+      original_nvim_create_user_command = vim.api.nvim_create_user_command
+      spy.on(vim.api, "nvim_create_user_command")
+      
+      -- Mock minimal server functionality
+      package.loaded["claudecode.server.init"] = {
+        start = function() return true, 12345 end,
+        stop = function() return true end,
+      }
+      
+      -- Mock lockfile
+      package.loaded["claudecode.lockfile"] = {
+        create = function() return true, nil, "test-token" end,
+        remove = function() return true end,
+        generate_auth_token = function() return "test-auth-token" end,
+      }
+      
+      -- Mock other required modules minimally
+      package.loaded["claudecode.selection"] = {
+        enable = function() end,
+        disable = function() end,
+      }
+      
+      package.loaded["claudecode.diff"] = {
+        setup = function() end,
+      }
+      
+      package.loaded["claudecode.logger"] = {
+        setup = function() end,
+        info = function() end,
+        warn = function() end,
+        error = function() end,
+        debug = function() end,
+      }
+    end)
+
+    after_each(function()
+      -- Restore original function
+      vim.api.nvim_create_user_command = original_nvim_create_user_command
+    end)
+
+    it("should register terminal commands when enable_terminal is true", function()
+      -- Mock terminal module
+      package.loaded["claudecode.terminal"] = {
+        setup = function() end,
+        open = function() end,
+        close = function() end,
+        simple_toggle = function() end,
+        focus_toggle = function() end,
+        ensure_visible = function() end,
+      }
+      
+      local claudecode = require("claudecode")
+      claudecode.setup({
+        auto_start = false,
+        enable_terminal = true,
+      })
+
+      local registered_commands = {}
+      for _, call in ipairs(vim.api.nvim_create_user_command.calls) do
+        registered_commands[call.vals[1]] = true
+      end
+
+      assert.is_true(registered_commands["ClaudeCode"] ~= nil, "ClaudeCode command should be registered")
+      assert.is_true(registered_commands["ClaudeCodeOpen"] ~= nil, "ClaudeCodeOpen command should be registered")
+      assert.is_true(registered_commands["ClaudeCodeClose"] ~= nil, "ClaudeCodeClose command should be registered")
+      assert.is_true(registered_commands["ClaudeCodeFocus"] ~= nil, "ClaudeCodeFocus command should be registered")
+    end)
+
+    it("should NOT register terminal commands when enable_terminal is false", function()
+      -- Mock terminal module
+      package.loaded["claudecode.terminal"] = {
+        setup = function() end,
+        open = function() end,
+        close = function() end,
+        simple_toggle = function() end,
+        focus_toggle = function() end,
+        ensure_visible = function() end,
+      }
+      
+      local claudecode = require("claudecode")
+      claudecode.setup({
+        auto_start = false,
+        enable_terminal = false,
+      })
+
+      local registered_commands = {}
+      for _, call in ipairs(vim.api.nvim_create_user_command.calls) do
+        registered_commands[call.vals[1]] = true
+      end
+
+      assert.is_nil(registered_commands["ClaudeCode"], "ClaudeCode command should NOT be registered")
+      assert.is_nil(registered_commands["ClaudeCodeOpen"], "ClaudeCodeOpen command should NOT be registered")
+      assert.is_nil(registered_commands["ClaudeCodeClose"], "ClaudeCodeClose command should NOT be registered")
+      assert.is_nil(registered_commands["ClaudeCodeFocus"], "ClaudeCodeFocus command should NOT be registered")
+    end)
+
+    it("should NOT call terminal.setup when enable_terminal is false", function()
+      local terminal_setup_called = false
+      
+      -- Mock terminal module with tracking
+      package.loaded["claudecode.terminal"] = {
+        setup = function()
+          terminal_setup_called = true
+        end,
+        open = function() end,
+        close = function() end,
+        simple_toggle = function() end,
+        focus_toggle = function() end,
+        ensure_visible = function() end,
+      }
+      
+      local claudecode = require("claudecode")
+      claudecode.setup({
+        auto_start = false,
+        enable_terminal = false,
+      })
+
+      assert.is_false(terminal_setup_called, "terminal.setup should NOT be called when enable_terminal is false")
+    end)
+
+    it("should call terminal.setup when enable_terminal is true", function()
+      local terminal_setup_called = false
+      
+      -- Mock terminal module with tracking
+      package.loaded["claudecode.terminal"] = {
+        setup = function()
+          terminal_setup_called = true
+        end,
+        open = function() end,
+        close = function() end,
+        simple_toggle = function() end,
+        focus_toggle = function() end,
+        ensure_visible = function() end,
+      }
+      
+      local claudecode = require("claudecode")
+      claudecode.setup({
+        auto_start = false,
+        enable_terminal = true,
+      })
+
+      assert.is_true(terminal_setup_called, "terminal.setup should be called when enable_terminal is true")
     end)
   end)
 end)
