@@ -28,6 +28,12 @@ describe("enable_terminal configuration", function()
       get_client_count = function()
         return 0  -- Default to no clients
       end,
+      get_status = function()
+        return {
+          running = true,
+          client_count = 0,  -- Default to no clients
+        }
+      end,
     }
 
     mock_lockfile = {
@@ -126,8 +132,11 @@ describe("enable_terminal configuration", function()
       claudecode.start()
 
       -- Simulate Claude not connected
-      mock_server.get_client_count = function()
-        return 0
+      mock_server.get_status = function()
+        return {
+          running = true,
+          client_count = 0,
+        }
       end
 
       -- Send @ mention
@@ -145,8 +154,11 @@ describe("enable_terminal configuration", function()
       claudecode.start()
 
       -- Simulate Claude connected
-      mock_server.get_client_count = function()
-        return 1
+      mock_server.get_status = function()
+        return {
+          running = true,
+          client_count = 1,
+        }
       end
 
       -- Send @ mention
@@ -184,8 +196,11 @@ describe("enable_terminal configuration", function()
       claudecode.start()
 
       -- Simulate Claude not connected
-      mock_server.get_client_count = function()
-        return 0
+      mock_server.get_status = function()
+        return {
+          running = true,
+          client_count = 0,
+        }
       end
 
       -- Send @ mention
@@ -204,8 +219,11 @@ describe("enable_terminal configuration", function()
       claudecode.start()
 
       -- Simulate Claude connected
-      mock_server.get_client_count = function()
-        return 1
+      mock_server.get_status = function()
+        return {
+          running = true,
+          client_count = 1,
+        }
       end
 
       -- Send @ mention
