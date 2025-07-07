@@ -60,9 +60,7 @@ describe("enable_terminal configuration", function()
     -- Mock require to intercept module loading
     local original_require = require
     _G.require = function(mod)
-      if mod == "claudecode" then
-        return claudecode
-      elseif mod == "claudecode.server.init" then
+      if mod == "claudecode.server.init" then
         return mock_server
       elseif mod == "claudecode.lockfile" then
         return mock_lockfile
@@ -299,7 +297,7 @@ describe("enable_terminal configuration", function()
 
       local success, err = pcall(config.validate, invalid_config)
       assert.is_false(success)
-      assert.is_not_nil(string.find(err, "enable_terminal must be a boolean"))
+      assert.is_not_nil(string.find(tostring(err), "enable_terminal must be a boolean"))
     end)
   end)
 end)
