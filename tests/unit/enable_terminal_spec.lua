@@ -99,15 +99,25 @@ describe("enable_terminal configuration", function()
 
       -- Mock minimal server functionality
       package.loaded["claudecode.server.init"] = {
-        start = function() return true, 12345 end,
-        stop = function() return true end,
+        start = function()
+          return true, 12345
+        end,
+        stop = function()
+          return true
+        end,
       }
 
       -- Mock lockfile
       package.loaded["claudecode.lockfile"] = {
-        create = function() return true, nil, "test-token" end,
-        remove = function() return true end,
-        generate_auth_token = function() return "test-auth-token" end,
+        create = function()
+          return true, nil, "test-token"
+        end,
+        remove = function()
+          return true
+        end,
+        generate_auth_token = function()
+          return "test-auth-token"
+        end,
       }
 
       -- Mock other required modules minimally
