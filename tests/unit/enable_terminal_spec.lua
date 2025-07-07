@@ -92,34 +92,34 @@ describe("enable_terminal configuration", function()
       package.loaded["claudecode"] = nil
       package.loaded["claudecode.server.init"] = nil
       package.loaded["claudecode.terminal"] = nil
-      
+
       -- Save original and set up spy
       original_nvim_create_user_command = vim.api.nvim_create_user_command
       spy.on(vim.api, "nvim_create_user_command")
-      
+
       -- Mock minimal server functionality
       package.loaded["claudecode.server.init"] = {
         start = function() return true, 12345 end,
         stop = function() return true end,
       }
-      
+
       -- Mock lockfile
       package.loaded["claudecode.lockfile"] = {
         create = function() return true, nil, "test-token" end,
         remove = function() return true end,
         generate_auth_token = function() return "test-auth-token" end,
       }
-      
+
       -- Mock other required modules minimally
       package.loaded["claudecode.selection"] = {
         enable = function() end,
         disable = function() end,
       }
-      
+
       package.loaded["claudecode.diff"] = {
         setup = function() end,
       }
-      
+
       package.loaded["claudecode.logger"] = {
         setup = function() end,
         info = function() end,
