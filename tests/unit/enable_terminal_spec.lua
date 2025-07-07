@@ -144,7 +144,7 @@ describe("enable_terminal configuration", function()
         focus_toggle = function() end,
         ensure_visible = function() end,
       }
-      
+
       local claudecode = require("claudecode")
       claudecode.setup({
         auto_start = false,
@@ -172,7 +172,7 @@ describe("enable_terminal configuration", function()
         focus_toggle = function() end,
         ensure_visible = function() end,
       }
-      
+
       local claudecode = require("claudecode")
       claudecode.setup({
         auto_start = false,
@@ -192,7 +192,7 @@ describe("enable_terminal configuration", function()
 
     it("should NOT call terminal.setup when enable_terminal is false", function()
       local terminal_setup_called = false
-      
+
       -- Mock terminal module with tracking
       package.loaded["claudecode.terminal"] = {
         setup = function()
@@ -204,7 +204,7 @@ describe("enable_terminal configuration", function()
         focus_toggle = function() end,
         ensure_visible = function() end,
       }
-      
+
       local claudecode = require("claudecode")
       claudecode.setup({
         auto_start = false,
@@ -216,7 +216,7 @@ describe("enable_terminal configuration", function()
 
     it("should call terminal.setup when enable_terminal is true", function()
       local terminal_setup_called = false
-      
+
       -- Mock terminal module with tracking
       package.loaded["claudecode.terminal"] = {
         setup = function()
@@ -228,7 +228,7 @@ describe("enable_terminal configuration", function()
         focus_toggle = function() end,
         ensure_visible = function() end,
       }
-      
+
       local claudecode = require("claudecode")
       claudecode.setup({
         auto_start = false,
